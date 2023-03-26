@@ -7,7 +7,7 @@ import lombok.experimental.FieldDefaults;
 import java.sql.Timestamp;
 
 @Data
-@FieldDefaults(level= AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequestDto {
     Long requestId;
     Long requestorId;

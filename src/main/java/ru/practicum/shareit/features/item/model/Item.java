@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
-@FieldDefaults(level= AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
     Long id;
     Long ownerId;
