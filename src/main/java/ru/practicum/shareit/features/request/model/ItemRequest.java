@@ -1,13 +1,16 @@
 package ru.practicum.shareit.features.request.model;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.sql.Timestamp;
 
 @Data
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class ItemRequest {
-    private Long requestId;
-    private Long requestorId;
-    private String description;
-    private Timestamp creationDate;
+    Long requestId;
+    Long requestorId;
+    String description;
+    Timestamp creationDate;
 }

@@ -1,13 +1,14 @@
 package ru.practicum.shareit.features.item;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
+import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.features.item.model.Item;
 import ru.practicum.shareit.features.user.UserRepository;
 import ru.practicum.shareit.utility.ItemValidator;
@@ -62,22 +63,25 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.patch(ownerId, itemId, applyPatchItem(itemId, json));
     }
 
-    @SneakyThrows
     private Item applyPatchItem(Long itemId, String json) {
         Item item = itemRepository.getById(itemId);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        JsonNode jsonNode = objectMapper.readTree(json);
-        if (jsonNode.has("name")) {
-            patchItemName(jsonNode, item);
-        }
-        if (jsonNode.has("description")) {
-            patchItemDescription(jsonNode, item);
-        }
-        if (jsonNode.has("available")) {
-            patchItemAvailable(jsonNode, item);
+        try {
+            JsonNode jsonNode = objectMapper.readTree(json);
+            if (jsonNode.has("name")) {
+                patchItemName(jsonNode, item);
+            }
+            if (jsonNode.has("description")) {
+                patchItemDescription(jsonNode, item);
+            }
+            if (jsonNode.has("available")) {
+                patchItemAvailable(jsonNode, item);
+            }
+        } catch (JsonProcessingException e) {
+            throw new ValidationException("Item data processing error");
         }
         return item;
     }

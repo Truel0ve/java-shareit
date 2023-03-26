@@ -14,9 +14,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/items")
 public class ItemController {
     private final ItemService itemService;
+    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
 
     @GetMapping
-    public List<ItemDto> getAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long ownerId) {
+    public List<ItemDto> getAllOwnerItems(@RequestHeader(USER_ID_HEADER) Long ownerId) {
         RequestLogger.logRequest(RequestMethod.GET, "/items");
         return itemService.getAllOwnerItems(ownerId).stream()
                 .map(ItemMapper::toItemDto)
@@ -24,14 +25,14 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ItemDto getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto getItemById(@RequestHeader(USER_ID_HEADER) Long userId,
                                @PathVariable Long id) {
         RequestLogger.logRequest(RequestMethod.GET, "/items/" + id);
         return ItemMapper.toItemDto(itemService.getById(userId, id));
     }
 
     @GetMapping("/search")
-    public List<ItemDto> getSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public List<ItemDto> getSearch(@RequestHeader(USER_ID_HEADER) Long userId,
                                  @RequestParam("text") String text) {
         RequestLogger.logRequest(RequestMethod.GET, "/items/search?text=" + text);
         return itemService.getSearch(userId, text).stream()
@@ -40,14 +41,14 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto postUser(@RequestHeader("X-Sharer-User-Id") Long ownerId,
+    public ItemDto postUser(@RequestHeader(USER_ID_HEADER) Long ownerId,
                             @Valid @RequestBody ItemDto itemDto) {
         RequestLogger.logRequest(RequestMethod.POST, "/items");
         return ItemMapper.toItemDto(itemService.create(ownerId, ItemMapper.toItem(itemDto)));
     }
 
     @PatchMapping("/{id}")
-    public ItemDto patchItem(@RequestHeader("X-Sharer-User-Id") Long ownerId,
+    public ItemDto patchItem(@RequestHeader(USER_ID_HEADER) Long ownerId,
                              @PathVariable Long id,
                              @RequestBody String json) {
         RequestLogger.logRequest(RequestMethod.PATCH, "/items/" + id);
@@ -55,7 +56,7 @@ public class ItemController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteItemById(@RequestHeader("X-Sharer-User-Id") Long ownerId,
+    public void deleteItemById(@RequestHeader(USER_ID_HEADER) Long ownerId,
                                @PathVariable Long id) {
         RequestLogger.logRequest(RequestMethod.DELETE, "/items/" + id);
         itemService.deleteById(ownerId, id);

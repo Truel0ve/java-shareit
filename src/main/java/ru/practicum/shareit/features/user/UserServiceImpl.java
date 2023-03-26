@@ -1,16 +1,17 @@
 package ru.practicum.shareit.features.user;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.ArgumentAlreadyExistsException;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
+import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.features.user.model.User;
 import ru.practicum.shareit.utility.UserValidator;
 
@@ -45,19 +46,22 @@ public class UserServiceImpl implements UserService {
         return userRepository.patch(id, applyPatchUser(id, json));
     }
 
-    @SneakyThrows
     private User applyPatchUser(Long id, String json) {
         User user = getById(id);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        JsonNode jsonNode = objectMapper.readTree(json);
-        if (jsonNode.has("name")) {
-            patchUserName(jsonNode, user);
-        }
-        if (jsonNode.has("email")) {
-            patchUserEmail(jsonNode, user);
+        try {
+            JsonNode jsonNode = objectMapper.readTree(json);
+            if (jsonNode.has("name")) {
+                patchUserName(jsonNode, user);
+            }
+            if (jsonNode.has("email")) {
+                patchUserEmail(jsonNode, user);
+            }
+        } catch (JsonProcessingException e) {
+            throw new ValidationException("User data processing error");
         }
         return user;
     }

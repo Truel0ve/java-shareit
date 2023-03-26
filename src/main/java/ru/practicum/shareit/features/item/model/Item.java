@@ -1,21 +1,24 @@
 package ru.practicum.shareit.features.item.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
+@FieldDefaults(level= AccessLevel.PRIVATE)
 public class Item {
-    private Long id;
-    private Long ownerId;
+    Long id;
+    Long ownerId;
     @NotBlank
-    private String name;
+    String name;
     @NotBlank
-    private String description;
+    String description;
     @NotNull
-    private Boolean available;
-    private Long requestId;
+    Boolean available;
+    Long requestId;
 }
