@@ -1,17 +1,24 @@
 package ru.practicum.shareit.features.user;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import ru.practicum.shareit.features.user.model.User;
 
-import java.util.List;
+import java.util.Optional;
 
-public interface UserRepository {
-    List<User> getAll();
+public interface UserRepository extends JpaRepository<User, Long>, QuerydslPredicateExecutor<User> {
 
-    User getById(Long id);
+    // Find userShort
+    Optional<UserShort> findUserById(Long id);
 
-    User create(User user);
-
-    User patch(Long id, User user);
-
-    void deleteById(Long id);
+    // Patch user
+    @Modifying
+    @Query("UPDATE User u " +
+            "SET u.name = ?2, u.email = ?3 " +
+            "WHERE u.id = ?1")
+    void patch(Long id,
+               String name,
+               String email);
 }

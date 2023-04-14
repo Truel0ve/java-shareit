@@ -9,45 +9,73 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.ArgumentAlreadyExistsException;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
 import ru.practicum.shareit.features.user.model.User;
+import ru.practicum.shareit.features.user.model.UserDto;
+import ru.practicum.shareit.features.user.model.UserShortDto;
 import ru.practicum.shareit.utility.UserValidator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Getter
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public List<User> getAll() {
-        return userRepository.getAll();
+    public List<UserDto> getAll() {
+        return userRepository.findAll().stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public User getById(Long id) {
+    public UserDto getUserDtoById(Long id) {
         validateUserId(id);
-        return userRepository.getById(id);
+        return UserMapper.toUserDto(userRepository.getReferenceById(id));
     }
 
     @Override
-    public User create(User user) {
-        validateSameEmail(user.getEmail());
-        return userRepository.create(user);
+    public UserShortDto getUserShortById(Long id) {
+        return new UserShortDto(userRepository.findUserById(id)
+                .orElseThrow(() -> new ArgumentNotFoundException("The specified user id=" + id + " does not exist")));
     }
 
     @Override
-    public User patch(Long id, String json) {
+    public User getUserById(Long id) {
         validateUserId(id);
-        return userRepository.patch(id, applyPatchUser(id, json));
+        return userRepository.getReferenceById(id);
+    }
+
+    @Transactional
+    @Override
+    public UserDto create(UserDto userDto) {
+        return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
+    }
+
+    @Transactional
+    @Override
+    public UserDto patch(Long id, String json) {
+        validateUserId(id);
+        User patchedUser = applyPatchUser(id, json);
+        userRepository.patch(id, patchedUser.getName(), patchedUser.getEmail());
+        return UserMapper.toUserDto(userRepository.getReferenceById(id));
+    }
+
+    @Transactional
+    @Override
+    public void deleteById(Long id) {
+        validateUserId(id);
+        userRepository.deleteById(id);
     }
 
     private User applyPatchUser(Long id, String json) {
-        User user = getById(id);
+        User user = userRepository.getReferenceById(id);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper
                 .enable(SerializationFeature.INDENT_OUTPUT)
@@ -75,29 +103,12 @@ public class UserServiceImpl implements UserService {
     private void patchUserEmail(JsonNode jsonNode, User user) {
         String newEmail = jsonNode.get("email").asText();
         UserValidator.validateEmail(newEmail);
-        if (!user.getEmail().equals(newEmail)) {
-            validateSameEmail(newEmail);
-        }
         user.setEmail(newEmail);
     }
 
-    @Override
-    public void deleteById(Long id) {
-        validateUserId(id);
-        userRepository.deleteById(id);
-    }
-
     private void validateUserId(Long id) {
-        if (id == null || userRepository.getById(id) == null) {
+        if (id == null || userRepository.findById(id).isEmpty()) {
             throw new ArgumentNotFoundException("The specified user id=" + id + " does not exist");
-        }
-    }
-
-    private void validateSameEmail(String email) {
-        if (getAll()
-                .stream()
-                .anyMatch(someUser -> someUser.getEmail().equals(email))) {
-            throw new ArgumentAlreadyExistsException("E-mail " + email + " is already taken by another user");
         }
     }
 }

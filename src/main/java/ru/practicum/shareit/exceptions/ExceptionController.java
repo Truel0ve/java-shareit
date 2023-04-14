@@ -1,6 +1,7 @@
 package ru.practicum.shareit.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -37,14 +38,20 @@ public class ExceptionController {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler(ArgumentAlreadyExistsException.class)
+    @ExceptionHandler({ArgumentAlreadyExistsException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleAlreadyExistsException(final Exception e) {
+        String message;
+        if (e.getClass().equals(DataIntegrityViolationException.class)) {
+            message = ((DataIntegrityViolationException) e).getMostSpecificCause().getLocalizedMessage();
+        } else {
+            message = e.getMessage();
+        }
         log.error(e.getMessage(), e);
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse(message);
     }
 
-    @ExceptionHandler(Throwable.class)
+    @ExceptionHandler({Throwable.class, WrongStateArgumentException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
         log.warn(e.getMessage(), e);
