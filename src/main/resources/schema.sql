@@ -5,27 +5,19 @@ CREATE TABLE IF NOT EXISTS users (
 	CHECK (email ~* '^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$')
 );
 
-CREATE TABLE IF NOT EXISTS requests (
-	request_id		BIGINT			GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	requestor_id	BIGINT			REFERENCES users (user_id) ON DELETE CASCADE,
-	description		VARCHAR(200)	NOT NULL,
-	creation_date	TIMESTAMP		DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS items (
 	item_id			BIGINT			GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	owner_id		BIGINT			REFERENCES users (user_id) ON DELETE CASCADE,
 	item_name		VARCHAR(50)		NOT NULL,
 	description		VARCHAR(200)	NOT NULL,
-	available		BOOLEAN			NOT NULL,
-	request_id		BIGINT			REFERENCES requests (request_id) ON DELETE CASCADE
+	available		BOOLEAN			NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments (
 	comment_id		BIGINT			GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	content			VARCHAR(200)	NOT NULL,
 	author_id		BIGINT			REFERENCES users (user_id) ON DELETE CASCADE,
-	item_id			BIGINT			REFERENCES items (item_id) ON DELETE CASCADE,
+	item_id			BIGINT			REFERENCES items (item_id) ON DELETE cascade,
 	creation_date	TIMESTAMP		DEFAULT CURRENT_TIMESTAMP
 );
 
