@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "items", schema = "public")
+@Table(name = "items")
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {

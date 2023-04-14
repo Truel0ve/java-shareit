@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bookings", schema = "public")
+@Table(name = "bookings")
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Booking {

@@ -3,12 +3,11 @@ package ru.practicum.shareit.features.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import ru.practicum.shareit.features.user.model.User;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long>, QuerydslPredicateExecutor<User> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
     // Find userShort
     Optional<UserShort> findUserById(Long id);
