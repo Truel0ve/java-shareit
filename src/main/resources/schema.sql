@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS users (
 	user_id 		BIGINT 			GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	user_name 		VARCHAR(50)		NOT NULL,
 	email 			VARCHAR(255) 	UNIQUE NOT NULL
-	CHECK (email ~* '^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$')
 );
 
 CREATE TABLE IF NOT EXISTS items (
