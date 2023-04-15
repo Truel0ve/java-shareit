@@ -3,7 +3,6 @@ package ru.practicum.shareit.features.item.model;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.shareit.features.request.model.ItemRequest;
 import ru.practicum.shareit.features.user.model.User;
 
 import javax.persistence.*;
