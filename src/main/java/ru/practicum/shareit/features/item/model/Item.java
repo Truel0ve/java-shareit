@@ -36,8 +36,4 @@ public class Item {
     @NotNull
     @Column(name = "available", nullable = false)
     Boolean available;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "request_id")
-    ItemRequest request;
 }
