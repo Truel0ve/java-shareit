@@ -1,7 +1,8 @@
 package ru.practicum.shareit.features.item.model;
 
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.features.user.model.User;
 
@@ -11,7 +12,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "items", schema = "public")
-@Data
+@Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
     @Id

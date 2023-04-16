@@ -1,7 +1,8 @@
 package ru.practicum.shareit.features.request.model;
 
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.features.user.model.User;
 
@@ -12,7 +13,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "requests", schema = "public")
-@Data
+@Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequest {
     @Id
