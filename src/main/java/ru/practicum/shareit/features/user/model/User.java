@@ -11,7 +11,8 @@ import javax.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "users", schema = "public")
-@Getter @Setter
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
     @Id

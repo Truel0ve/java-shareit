@@ -12,7 +12,8 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "items", schema = "public")
-@Getter @Setter
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Item {
     @Id

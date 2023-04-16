@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bookings", schema = "public")
-@Getter @Setter
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Booking {
     @Id

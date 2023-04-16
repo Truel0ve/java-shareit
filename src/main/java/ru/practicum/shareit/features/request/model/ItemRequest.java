@@ -13,7 +13,8 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "requests", schema = "public")
-@Getter @Setter
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequest {
     @Id

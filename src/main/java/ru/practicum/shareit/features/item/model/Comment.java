@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments", schema = "public")
-@Getter @Setter
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Comment {
     @Id
