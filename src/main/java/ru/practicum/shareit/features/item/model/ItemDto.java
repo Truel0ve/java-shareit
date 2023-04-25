@@ -1,15 +1,16 @@
 package ru.practicum.shareit.features.item.model;
 
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.features.booking.model.BookingQueueInfo;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDto {
     Long id;
@@ -20,5 +21,7 @@ public class ItemDto {
     String description;
     @NotNull
     Boolean available;
-    Long requestId;
+    BookingQueueInfo lastBooking;
+    BookingQueueInfo nextBooking;
+    List<CommentDto> comments = new ArrayList<>();
 }

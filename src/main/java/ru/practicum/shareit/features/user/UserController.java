@@ -7,39 +7,36 @@ import ru.practicum.shareit.utility.RequestLogger;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "/users")
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
 
     @GetMapping
     public List<UserDto> getAllUsers() {
         RequestLogger.logRequest(RequestMethod.GET, "/users");
-        return userService.getAll().stream()
-                .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
+        return userService.getAll();
     }
 
     @GetMapping("/{id}")
     public UserDto getUserById(@PathVariable Long id) {
         RequestLogger.logRequest(RequestMethod.GET, "/users/" + id);
-        return UserMapper.toUserDto(userService.getById(id));
+        return userService.getUserDtoById(id);
     }
 
     @PostMapping
     public UserDto postUser(@Valid @RequestBody UserDto userDto) {
         RequestLogger.logRequest(RequestMethod.POST, "/users");
-        return UserMapper.toUserDto(userService.create(UserMapper.toUser(userDto)));
+        return userService.create(userDto);
     }
 
     @PatchMapping("/{id}")
     public UserDto patchUser(@PathVariable Long id,
                              @RequestBody String json) {
         RequestLogger.logRequest(RequestMethod.PATCH, "/users/" + id);
-        return UserMapper.toUserDto(userService.patch(id, json));
+        return userService.patch(id, json);
     }
 
     @DeleteMapping("/{id}")
