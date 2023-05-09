@@ -23,7 +23,7 @@ public class ItemRequest {
     Long id;
 
     @NotNull
-    @ManyToOne(cascade=CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "requestor_id", nullable = false)
     User user;
 

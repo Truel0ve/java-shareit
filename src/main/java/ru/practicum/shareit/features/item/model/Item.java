@@ -23,7 +23,7 @@ public class Item {
     Long id;
 
     @NotNull
-    @ManyToOne(cascade=CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     User user;
 
@@ -39,7 +39,7 @@ public class Item {
     @Column(name = "available", nullable = false)
     Boolean available;
 
-    @ManyToOne(cascade=CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "request_id")
     ItemRequest itemRequest;
 }

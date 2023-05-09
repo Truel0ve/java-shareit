@@ -316,6 +316,7 @@ class ItemServiceIntegrationTest {
         assertEquals("Unable to add a comment. User id=" + owner.getId() + " is the owner of item id=" + itemDto.getId(),
                 exception.getMessage(), "Invalid message");
     }
+
     @Test
     void shouldNotPostCommentByNotBooker() {
         User notBooker = setUser("New user", "new_user@email.com");
@@ -357,7 +358,7 @@ class ItemServiceIntegrationTest {
         itemDto.setName("Item");
         itemDto.setDescription("Description");
         itemDto.setAvailable(true);
-        if(requestId != null) {
+        if (requestId != null) {
             itemDto.setRequestId(requestId);
         }
         return itemDto;

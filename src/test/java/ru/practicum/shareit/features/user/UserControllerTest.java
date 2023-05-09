@@ -44,7 +44,7 @@ class UserControllerTest {
         user.setName("John Doe");
         user.setEmail("john_doe@email.com");
     }
-    
+
     @Test
     void shouldPostUser() throws Exception {
         when(userService.create(any(UserDto.class)))
