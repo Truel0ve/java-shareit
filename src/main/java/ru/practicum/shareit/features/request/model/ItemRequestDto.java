@@ -7,6 +7,7 @@ import ru.practicum.shareit.features.item.model.ItemForRequestDto;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Data
@@ -15,6 +16,6 @@ public class ItemRequestDto {
     Long id;
     @NotBlank
     String description;
-    LocalDateTime created = LocalDateTime.now();
+    LocalDateTime created = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
     List<ItemForRequestDto> items;
 }

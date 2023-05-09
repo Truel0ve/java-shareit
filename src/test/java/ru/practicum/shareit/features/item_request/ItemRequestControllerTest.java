@@ -19,7 +19,6 @@ import ru.practicum.shareit.features.request.model.ItemRequestDto;
 import ru.practicum.shareit.utility.PageManager;
 
 import java.nio.charset.StandardCharsets;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +48,6 @@ class ItemRequestControllerTest {
         request = new ItemRequestDto();
         request.setDescription("Request");
         request.setItems(new ArrayList<>());
-        request.setCreated(request.getCreated().truncatedTo(ChronoUnit.SECONDS));
     }
 
     @Test
