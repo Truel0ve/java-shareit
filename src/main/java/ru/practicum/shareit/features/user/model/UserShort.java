@@ -1,4 +1,4 @@
-package ru.practicum.shareit.features.user;
+package ru.practicum.shareit.features.user.model;
 
 public interface UserShort {
 

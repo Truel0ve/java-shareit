@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.features.booking.BookingRepository;
 import ru.practicum.shareit.features.booking.model.Booking;
 import ru.practicum.shareit.features.booking.model.BookingStatus;
 import ru.practicum.shareit.features.item.model.*;
+import ru.practicum.shareit.features.request.ItemRequestRepository;
 import ru.practicum.shareit.features.user.UserService;
 import ru.practicum.shareit.utility.ItemValidator;
 
@@ -29,38 +31,38 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
     private final UserService userService;
 
     @Override
-    public List<ItemDto> getAllOwnerItems(Long ownerId) {
-        return itemRepository.findByUserId(ownerId).stream()
+    public List<ItemDto> getAllOwnerItems(Long ownerId, Pageable pageable) {
+        return itemRepository.findByUserId(ownerId, pageable).stream()
                 .map(ItemMapper::toItemDto)
+                .map(this::setCommentsForItemDto)
                 .peek(this::setBookingsForItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public ItemDto getItemDtoById(Long userId, Long itemId) {
-        Item item = findItemById(itemId);
+        Item item = getItemById(itemId);
         ItemDto itemDto = ItemMapper.toItemDto(item);
         if (isOwnerOfItem(userId, item)) {
             setBookingsForItemDto(itemDto);
         }
-        itemDto.setComments(commentRepository.findByItemId(itemId)
-                        .stream()
-                        .map(CommentMapper::toCommentDto)
-                        .collect(Collectors.toList()));
+        setCommentsForItemDto(itemDto);
         return itemDto;
     }
 
     @Override
-    public List<ItemDto> getSearch(String text) {
-        if (text.isBlank()) {
+    public List<ItemDto> getSearch(Long userId, String text, Pageable pageable) {
+        userService.validateUserId(userId);
+        if (text == null || text.isBlank()) {
             return new ArrayList<>();
         } else {
-            return itemRepository.getSearch(text).stream()
+            return itemRepository.getSearch(text, pageable).stream()
                     .map(ItemMapper::toItemDto)
                     .collect(Collectors.toList());
         }
@@ -71,25 +73,29 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto create(Long ownerId, ItemDto itemDto) {
         Item item = ItemMapper.toItem(itemDto);
         item.setUser(userService.getUserById(ownerId));
+        if (itemDto.getRequestId() != null) {
+            item.setItemRequest(itemRequestRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new ArgumentNotFoundException("The specified item request id=" + itemDto.getRequestId() + " does not exist")));
+        }
         return ItemMapper.toItemDto(itemRepository.save(item));
     }
 
     @Transactional
     @Override
     public ItemDto patch(Long ownerId, Long itemId, String json) {
-        if (!isOwnerOfItem(ownerId, findItemById(itemId))) {
+        if (!isOwnerOfItem(ownerId, getItemById(itemId))) {
             throw new ArgumentNotFoundException("User id=" + ownerId + " is not the owner of item id=" + itemId);
         }
         Item patchedItem = applyPatchItem(itemId, json);
         itemRepository.patch(
                 ownerId, itemId, patchedItem.getName(), patchedItem.getDescription(), patchedItem.getAvailable());
-        return ItemMapper.toItemDto(findItemById(itemId));
+        return ItemMapper.toItemDto(getItemById(itemId));
     }
 
     @Transactional
     @Override
     public void deleteById(Long ownerId, Long itemId) {
-        if (!isOwnerOfItem(ownerId, findItemById(itemId))) {
+        if (!isOwnerOfItem(ownerId, getItemById(itemId))) {
             throw new ArgumentNotFoundException("User id=" + ownerId + " is not the owner of item id=" + itemId);
         }
         itemRepository.deleteById(itemId);
@@ -112,17 +118,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item getItemById(Long itemId) {
-        return findItemById(itemId);
+    public List<ItemForRequestDto> getItemsForRequest(Long requestId) {
+        return itemRepository.findByItemRequestId(requestId).stream()
+                .map(ItemForRequestDto::new)
+                .collect(Collectors.toList());
     }
 
-    private Item findItemById(Long id) {
+    @Override
+    public Item getItemById(Long id) {
         return itemRepository.findById(id)
                 .orElseThrow(() -> new ArgumentNotFoundException("The specified item id=" + id + " does not exist"));
     }
 
     private Item applyPatchItem(Long itemId, String json) {
-        Item item = findItemById(itemId);
+        Item item = getItemById(itemId);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper
                 .enable(SerializationFeature.INDENT_OUTPUT)
@@ -178,13 +187,21 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
+    private ItemDto setCommentsForItemDto(ItemDto itemDto) {
+        itemDto.setComments(commentRepository.findByItemId(itemDto.getId())
+                .stream()
+                .map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList()));
+        return itemDto;
+    }
+
     private void validateUserForComment(Long userId, Long itemId) {
-        if (!isUserWasBooker(userId, itemId)) {
-            throw new ValidationException("User id=" + userId + " is still the holder of item id=" + itemId);
-        }
-        if (isOwnerOfItem(userId, findItemById(itemId))) {
+        if (isOwnerOfItem(userId, getItemById(itemId))) {
             throw new ArgumentNotFoundException(
                     "Unable to add a comment. User id=" + userId + " is the owner of item id=" + itemId);
+        }
+        if (!isUserWasBooker(userId, itemId)) {
+            throw new ValidationException("User id=" + userId + " is still the holder of item id=" + itemId);
         }
     }
 

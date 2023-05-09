@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.features.user.model.User;
+import ru.practicum.shareit.features.user.model.UserShort;
 
 import java.util.Optional;
 
@@ -13,7 +14,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<UserShort> findUserById(Long id);
 
     // Patch user
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE User u " +
             "SET u.name = ?2, u.email = ?3 " +
             "WHERE u.id = ?1")

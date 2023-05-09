@@ -3,14 +3,18 @@ package ru.practicum.shareit.features.request.model;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.features.item.model.ItemForRequestDto;
 
-import java.sql.Timestamp;
+import javax.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequestDto {
     Long id;
-    Long requestorId;
+    @NotBlank
     String description;
-    Timestamp creationDate;
+    LocalDateTime created = LocalDateTime.now();
+    List<ItemForRequestDto> items;
 }

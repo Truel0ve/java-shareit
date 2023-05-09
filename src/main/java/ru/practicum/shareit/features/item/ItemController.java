@@ -1,9 +1,11 @@
 package ru.practicum.shareit.features.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.features.item.model.CommentDto;
 import ru.practicum.shareit.features.item.model.ItemDto;
+import ru.practicum.shareit.utility.PageManager;
 import ru.practicum.shareit.utility.RequestLogger;
 
 import javax.validation.Valid;
@@ -17,9 +19,16 @@ public class ItemController {
     private static final String USER_ID_HEADER = "X-Sharer-User-Id";
 
     @GetMapping
-    public List<ItemDto> getAllOwnerItems(@RequestHeader(USER_ID_HEADER) Long ownerId) {
-        RequestLogger.logRequest(RequestMethod.GET, "/items");
-        return itemService.getAllOwnerItems(ownerId);
+    public List<ItemDto> getAllOwnerItems(@RequestHeader(USER_ID_HEADER) Long ownerId,
+                                          @RequestParam(required = false) Integer from,
+                                          @RequestParam(required = false) Integer size) {
+        if (from == null || size == null) {
+            RequestLogger.logRequest(RequestMethod.GET, "/items");
+            return itemService.getAllOwnerItems(ownerId, Pageable.unpaged());
+        } else {
+            RequestLogger.logRequest(RequestMethod.GET, "/items?from=" + from + "&size=" + size);
+            return itemService.getAllOwnerItems(ownerId, PageManager.getPageable(from, size));
+        }
     }
 
     @GetMapping("/{id}")
@@ -30,9 +39,17 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> getSearch(@RequestParam("text") String text) {
-        RequestLogger.logRequest(RequestMethod.GET, "/items/search?text=" + text);
-        return itemService.getSearch(text);
+    public List<ItemDto> getSearch(@RequestHeader(USER_ID_HEADER) Long userId,
+                                   @RequestParam("text") String text,
+                                   @RequestParam(required = false) Integer from,
+                                   @RequestParam(required = false) Integer size) {
+        if (from == null || size == null) {
+            RequestLogger.logRequest(RequestMethod.GET, "/items/search?text=" + text);
+            return itemService.getSearch(userId, text, Pageable.unpaged());
+        } else {
+            RequestLogger.logRequest(RequestMethod.GET, "/items/search?text=" + text + "&from=" + from + "&size=" + size);
+            return itemService.getSearch(userId, text, PageManager.getPageable(from, size));
+        }
     }
 
     @PostMapping

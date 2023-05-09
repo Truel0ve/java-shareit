@@ -20,4 +20,6 @@ public interface UserService {
     UserDto patch(Long id, String json);
 
     void deleteById(Long id);
+
+    void validateUserId(Long id);
 }

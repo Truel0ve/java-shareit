@@ -13,17 +13,18 @@ CREATE TABLE IF NOT EXISTS requests (
 
 CREATE TABLE IF NOT EXISTS items (
 	item_id			BIGINT			GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	owner_id		BIGINT			REFERENCES users (user_id),
+	owner_id		BIGINT			REFERENCES users (user_id) ON DELETE CASCADE,
 	item_name		VARCHAR(50)		NOT NULL,
 	description		VARCHAR(200)	NOT NULL,
-	available		BOOLEAN			NOT NULL
+	available		BOOLEAN			NOT NULL,
+	request_id		BIGINT			REFERENCES requests (request_id)
 );
 
 CREATE TABLE IF NOT EXISTS comments (
 	comment_id		BIGINT							GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	content			VARCHAR(200)					NOT NULL,
-	author_id		BIGINT							REFERENCES users (user_id),
-	item_id			BIGINT							REFERENCES items (item_id),
+	author_id		BIGINT							REFERENCES users (user_id) ON DELETE CASCADE,
+	item_id			BIGINT							REFERENCES items (item_id) ON DELETE CASCADE,
 	creation_date	TIMESTAMP WITHOUT TIME ZONE		DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -34,6 +35,6 @@ CREATE TABLE IF NOT EXISTS bookings (
 	start_date		TIMESTAMP WITHOUT TIME ZONE		NOT NULL,
 	end_date		TIMESTAMP WITHOUT TIME ZONE		NOT NULL,
 	status			booking_status					NOT NULL,
-	booker_id		BIGINT							REFERENCES users (user_id),
-	item_id			BIGINT							REFERENCES items (item_id)
+	booker_id		BIGINT							REFERENCES users (user_id) ON DELETE CASCADE,
+	item_id			BIGINT							REFERENCES items (item_id) ON DELETE CASCADE
 );
