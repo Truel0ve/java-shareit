@@ -93,10 +93,10 @@ class ItemRequestServiceIntegrationTest {
 
     @Test
     void shouldThrowExceptionAfterGettingRequestById() {
-        ArgumentNotFoundException exception2 = assertThrows(ArgumentNotFoundException.class,
+        ArgumentNotFoundException exception = assertThrows(ArgumentNotFoundException.class,
                 () -> itemRequestService.getRequestById(requester.getId(), 99L));
         assertEquals("The specified item request id=" + 99 + " does not exist",
-                exception2.getMessage(), "Invalid message");
+                exception.getMessage(), "Invalid message");
     }
 
     private User setUser(String name, String email) {

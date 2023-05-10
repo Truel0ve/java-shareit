@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
@@ -73,25 +76,16 @@ class UserServiceMockTest {
         Assertions.assertEquals(userService.getAll(), List.of(userDto));
     }
 
-    @Test
-    void shouldNotValidateNullUserId() {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = 99)
+    void shouldNotValidateNullUserId(Long input) {
         Mockito
-                .doThrow(new ArgumentNotFoundException("The specified user id=" + null + " does not exist"))
-                .when(userService).validateUserId(null);
+                .doThrow(new ArgumentNotFoundException("The specified user id=" + input + " does not exist"))
+                .when(userService).validateUserId(input);
         ArgumentNotFoundException exception = assertThrows(ArgumentNotFoundException.class,
-                () -> userService.validateUserId(null));
-        assertEquals("The specified user id=" + null + " does not exist",
-                exception.getMessage(), "Invalid message");
-    }
-
-    @Test
-    void shouldNotValidateWrongUserId() {
-        Mockito
-                .doThrow(new ArgumentNotFoundException("The specified user id=" + 99 + " does not exist"))
-                .when(userService).validateUserId(99L);
-        ArgumentNotFoundException exception = assertThrows(ArgumentNotFoundException.class,
-                () -> userService.validateUserId(99L));
-        assertEquals("The specified user id=" + 99 + " does not exist",
+                () -> userService.validateUserId(input));
+        assertEquals("The specified user id=" + input + " does not exist",
                 exception.getMessage(), "Invalid message");
     }
 

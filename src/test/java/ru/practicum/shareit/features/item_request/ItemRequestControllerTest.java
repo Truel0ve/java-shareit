@@ -5,6 +5,10 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,6 +25,7 @@ import ru.practicum.shareit.utility.PageManager;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -71,21 +76,10 @@ class ItemRequestControllerTest {
                 .createRequest(1L, request);
     }
 
-    @Test
-    void shouldNotPostRequestThenDescriptionIsNullOrBlank() throws Exception {
-        request.setDescription(null);
-
-        mvc.perform(post("/requests")
-                        .content(mapper.writeValueAsString(request))
-                        .header("X-Sharer-User-Id", 1)
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: description")));
-
-        request.setDescription(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostRequestThenDescriptionIsNullOrBlank(String input) throws Exception {
+        request.setDescription(input);
 
         mvc.perform(post("/requests")
                         .content(mapper.writeValueAsString(request))
@@ -116,23 +110,15 @@ class ItemRequestControllerTest {
                 .getUserRequests(1L);
     }
 
-    @Test
-    void shouldGetAllRequestsWithoutParams() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideParamValues")
+    void shouldGetAllRequestsWithoutParams(String param, String value) throws Exception {
         when(itemRequestService.getAllRequests(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(request));
 
         mvc.perform(get("/requests/all")
-                        .header("X-Sharer-User-Id", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(request.getId()), Long.class))
-                .andExpect(jsonPath("$[0].description", is(request.getDescription())))
-                .andExpect(jsonPath("$[0].created", is(request.getCreated().toString())))
-                .andExpect(jsonPath("$[0].items", is(request.getItems())));
-
-        mvc.perform(get("/requests/all")
                         .header("X-Sharer-User-Id", 1)
-                        .param("from", "1"))
+                        .param(param, value))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(request.getId()), Long.class))
@@ -140,18 +126,15 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$[0].created", is(request.getCreated().toString())))
                 .andExpect(jsonPath("$[0].items", is(request.getItems())));
 
-        mvc.perform(get("/requests/all")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(request.getId()), Long.class))
-                .andExpect(jsonPath("$[0].description", is(request.getDescription())))
-                .andExpect(jsonPath("$[0].created", is(request.getCreated().toString())))
-                .andExpect(jsonPath("$[0].items", is(request.getItems())));
-
-        Mockito.verify(itemRequestService, Mockito.times(3))
+        Mockito.verify(itemRequestService, Mockito.times(1))
                 .getAllRequests(1L, Pageable.unpaged());
+    }
+
+    private static Stream<Arguments> provideParamValues() {
+        return Stream.of(
+                Arguments.of("from", "1"),
+                Arguments.of("size", "1")
+        );
     }
 
     @Test

@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +23,7 @@ import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,7 +99,6 @@ class BookingServiceIntegrationTest {
                 exception.getMessage(), "Invalid message");
     }
 
-
     @Test
     void shouldNotCreateBookingThenAvailableIsFalse() {
         item.setAvailable(false);
@@ -111,80 +114,49 @@ class BookingServiceIntegrationTest {
                 exception.getMessage(), "Invalid message");
     }
 
-    @Test
-    void shouldNotCreateBookingThenBookingStartDateBeforeNow() {
+    @ParameterizedTest
+    @MethodSource("provideDatesForValidationException")
+    void shouldNotCreateBookingThenBookingDatesIsWrong(LocalDateTime start, LocalDateTime end, String message) {
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.create(
-                        booker.getId(),
-                        setBookingShort(
-                                item.getId(),
-                                LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0),
-                                LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0))));
-        assertEquals("Wrong start data value",
-                exception.getMessage(), "Invalid message");
+                () -> bookingService.create(booker.getId(), setBookingShort(item.getId(), start, end)));
+        assertEquals(message, exception.getMessage(), "Invalid message");
     }
 
-    @Test
-    void shouldNotCreateBookingThenBookingEndDateBeforeNow() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.create(
-                        booker.getId(),
-                        setBookingShort(
-                                item.getId(),
-                                LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0),
-                                LocalDateTime.of(2022, Month.SEPTEMBER, 2, 12, 0, 0))));
-        assertEquals("Wrong end data value",
-                exception.getMessage(), "Invalid message");
+    private static Stream<Arguments> provideDatesForValidationException() {
+        return Stream.of(
+                Arguments.of(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0),
+                        "Wrong start data value"),
+                Arguments.of(LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2022, Month.SEPTEMBER, 2, 12, 0, 0),
+                        "Wrong end data value"),
+                Arguments.of(LocalDateTime.of(2024, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0),
+                        "Wrong end data value"),
+                Arguments.of(LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0),
+                        "Start and end dates can`t be the same")
+        );
     }
 
-    @Test
-    void shouldNotCreateBookingThenBookingEndDateBeforeStartDate() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.create(
-                        booker.getId(),
-                        setBookingShort(
-                                item.getId(),
-                                LocalDateTime.of(2024, Month.SEPTEMBER, 1, 12, 0, 0),
-                                LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0))));
-        assertEquals("Wrong end data value",
-                exception.getMessage(), "Invalid message");
-    }
-
-    @Test
-    void shouldNotCreateBookingThenBookingStartDateAndEndDateTheSame() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.create(
-                        booker.getId(),
-                        setBookingShort(
-                                item.getId(),
-                                LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0),
-                                LocalDateTime.of(2023, Month.SEPTEMBER, 1, 12, 0, 0))));
-        assertEquals("Start and end dates can`t be the same",
-                exception.getMessage(), "Invalid message");
-    }
-
-    @Test
-    void shouldPatchApprovedBooking() {
-        BookingDto booking = bookingService.patch(owner.getId(), firstBooking.getId(), true);
+    @ParameterizedTest
+    @MethodSource("provideValuesForPatchBookings")
+    void shouldPatchApprovedBooking(Boolean input, BookingStatus status) {
+        BookingDto booking = bookingService.patch(owner.getId(), firstBooking.getId(), input);
 
         assertThat(booking.getId(), equalTo(firstBooking.getId()));
         assertThat(booking.getStart(), equalTo(firstBooking.getStart()));
         assertThat(booking.getEnd(), equalTo(firstBooking.getEnd()));
-        assertThat(booking.getStatus(), equalTo(BookingStatus.APPROVED));
+        assertThat(booking.getStatus(), equalTo(status));
         assertThat(booking.getBooker().getId(), equalTo(firstBooking.getBooker().getId()));
         assertThat(booking.getItem().getId(), equalTo(firstBooking.getItem().getId()));
     }
 
-    @Test
-    void shouldPatchRejectedBooking() {
-        BookingDto booking = bookingService.patch(owner.getId(), firstBooking.getId(), false);
-
-        assertThat(booking.getId(), equalTo(firstBooking.getId()));
-        assertThat(booking.getStart(), equalTo(firstBooking.getStart()));
-        assertThat(booking.getEnd(), equalTo(firstBooking.getEnd()));
-        assertThat(booking.getStatus(), equalTo(BookingStatus.REJECTED));
-        assertThat(booking.getBooker().getId(), equalTo(firstBooking.getBooker().getId()));
-        assertThat(booking.getItem().getId(), equalTo(firstBooking.getItem().getId()));
+    private static Stream<Arguments> provideValuesForPatchBookings() {
+        return Stream.of(
+                Arguments.of(true, BookingStatus.APPROVED),
+                Arguments.of(false, BookingStatus.REJECTED)
+        );
     }
 
     @Test
@@ -258,30 +230,29 @@ class BookingServiceIntegrationTest {
         assertThat(bookings.get(1).getId(), equalTo(firstBooking.getId()));
     }
 
-    @Test
-    void shouldGetPastBookingsOfBooker() {
+    @ParameterizedTest
+    @MethodSource("provideValuesForGetPastAndCurrentBookings")
+    void shouldGetPastAndCurrentBookingsOfBooker(LocalDateTime start, LocalDateTime end, String state) {
         Booking booking = entityManager.find(Booking.class, firstBooking.getId());
-        booking.setStart(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0));
-        booking.setEnd(LocalDateTime.of(2022, Month.SEPTEMBER, 2, 12, 0, 0));
+        booking.setStart(start);
+        booking.setEnd(end);
         entityManager.merge(booking);
 
-        List<BookingDto> bookings = bookingService.getBookingsOfBooker(booker.getId(), "PAST", Pageable.unpaged());
+        List<BookingDto> bookings = bookingService.getBookingsOfBooker(booker.getId(), state, Pageable.unpaged());
 
         assertThat(bookings, hasSize(1));
         assertThat(bookings.get(0).getId(), equalTo(firstBooking.getId()));
     }
 
-    @Test
-    void shouldGetCurrentBookingsOfBooker() {
-        Booking booking = entityManager.find(Booking.class, firstBooking.getId());
-        booking.setStart(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0));
-        booking.setEnd(LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0));
-        entityManager.merge(booking);
-
-        List<BookingDto> bookings = bookingService.getBookingsOfBooker(booker.getId(), "CURRENT", Pageable.unpaged());
-
-        assertThat(bookings, hasSize(1));
-        assertThat(bookings.get(0).getId(), equalTo(firstBooking.getId()));
+    private static Stream<Arguments> provideValuesForGetPastAndCurrentBookings() {
+        return Stream.of(
+                Arguments.of(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2022, Month.SEPTEMBER, 2, 12, 0, 0),
+                        "PAST"),
+                Arguments.of(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0),
+                        LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0),
+                        "CURRENT")
+        );
     }
 
     @Test
@@ -334,27 +305,15 @@ class BookingServiceIntegrationTest {
         assertThat(bookings.get(1).getId(), equalTo(firstBooking.getId()));
     }
 
-    @Test
-    void shouldGetPastBookingsOfrOwner() {
+    @ParameterizedTest
+    @MethodSource("provideValuesForGetPastAndCurrentBookings")
+    void shouldGetPastAndCurrentBookingsOfOwner(LocalDateTime start, LocalDateTime end, String state) {
         Booking booking = entityManager.find(Booking.class, firstBooking.getId());
-        booking.setStart(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0));
-        booking.setEnd(LocalDateTime.of(2022, Month.SEPTEMBER, 2, 12, 0, 0));
+        booking.setStart(start);
+        booking.setEnd(end);
         entityManager.merge(booking);
 
-        List<BookingDto> bookings = bookingService.getBookingsOfOwner(owner.getId(), "PAST", Pageable.unpaged());
-
-        assertThat(bookings, hasSize(1));
-        assertThat(bookings.get(0).getId(), equalTo(firstBooking.getId()));
-    }
-
-    @Test
-    void shouldGetCurrentBookingsOfOwner() {
-        Booking booking = entityManager.find(Booking.class, firstBooking.getId());
-        booking.setStart(LocalDateTime.of(2022, Month.SEPTEMBER, 1, 12, 0, 0));
-        booking.setEnd(LocalDateTime.of(2023, Month.SEPTEMBER, 2, 12, 0, 0));
-        entityManager.merge(booking);
-
-        List<BookingDto> bookings = bookingService.getBookingsOfOwner(owner.getId(), "CURRENT", Pageable.unpaged());
+        List<BookingDto> bookings = bookingService.getBookingsOfOwner(owner.getId(), state, Pageable.unpaged());
 
         assertThat(bookings, hasSize(1));
         assertThat(bookings.get(0).getId(), equalTo(firstBooking.getId()));

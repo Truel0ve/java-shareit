@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
@@ -196,7 +198,6 @@ class ItemServiceIntegrationTest {
                 .setParameter("id", itemId)
                 .executeUpdate();
 
-
         ArgumentNotFoundException exception = assertThrows(ArgumentNotFoundException.class,
                 () -> itemService.getItemShortById(itemId));
         assertEquals("The specified item id=" + itemId + " does not exist",
@@ -273,13 +274,11 @@ class ItemServiceIntegrationTest {
         assertThat(emptyList, hasSize(0));
     }
 
-    @Test
-    void shouldNotGetSearch() {
-        List<ItemDto> emptyList1 = itemService.getSearch(booker.getId(),null, Pageable.unpaged());
-        assertThat(emptyList1, hasSize(0));
-
-        List<ItemDto> emptyList2 = itemService.getSearch(booker.getId()," ", Pageable.unpaged());
-        assertThat(emptyList2, hasSize(0));
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotGetSearch(String input) {
+        List<ItemDto> emptyList = itemService.getSearch(booker.getId(),input, Pageable.unpaged());
+        assertThat(emptyList, hasSize(0));
     }
 
     @Test

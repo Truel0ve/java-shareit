@@ -4,6 +4,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -115,20 +118,14 @@ class UserServiceIntegrationTest {
         }
     }
 
-    @Test
-    void shouldNotValidateUserId() {
-        ArgumentNotFoundException exception1 = assertThrows(ArgumentNotFoundException.class,
-                () -> userService.validateUserId(null));
-        assertEquals("The specified user id=" + null + " does not exist",
-                exception1.getMessage(), "Invalid message");
-
-        userDto.setId(1L);
-
-        assertThat(entityManager.contains(UserMapper.toUser(userDto)), equalTo(false));
-        ArgumentNotFoundException exception2 = assertThrows(ArgumentNotFoundException.class,
-                () -> userService.validateUserId(userDto.getId()));
-        assertEquals("The specified user id=" + userDto.getId() + " does not exist",
-                exception2.getMessage(), "Invalid message");
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = 99)
+    void shouldNotValidateUserId(Long input) {
+        ArgumentNotFoundException exception = assertThrows(ArgumentNotFoundException.class,
+                () -> userService.validateUserId(input));
+        assertEquals("The specified user id=" + input + " does not exist",
+                exception.getMessage(), "Invalid message");
     }
 
     @Test

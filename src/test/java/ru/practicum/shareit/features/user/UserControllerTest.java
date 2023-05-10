@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -64,20 +66,10 @@ class UserControllerTest {
                 .create(user);
     }
 
-    @Test
-    void shouldNotPostUserThenNameIsNullOrBlank() throws Exception {
-        user.setName(null);
-
-        mvc.perform(post("/users")
-                        .content(mapper.writeValueAsString(user))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: name")));
-
-        user.setName(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostUserThenNameIsNullOrBlank(String input) throws Exception {
+        user.setName(input);
 
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user))
@@ -89,20 +81,10 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.error", is("Invalid data format: name")));
     }
 
-    @Test
-    void shouldNotPostUserThenEmailIsNullOrBlank() throws Exception {
-        user.setEmail(null);
-
-        mvc.perform(post("/users")
-                        .content(mapper.writeValueAsString(user))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: email")));
-
-        user.setEmail(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostUserThenEmailIsNullOrBlank(String input) throws Exception {
+        user.setEmail(input);
 
         mvc.perform(post("/users")
                         .content(mapper.writeValueAsString(user))

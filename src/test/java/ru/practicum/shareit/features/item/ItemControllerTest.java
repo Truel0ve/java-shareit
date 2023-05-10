@@ -5,6 +5,10 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,6 +25,7 @@ import ru.practicum.shareit.utility.PageManager;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -78,21 +83,10 @@ class ItemControllerTest {
                 .create(1L, item);
     }
 
-    @Test
-    void shouldNotPostItemThenNameIsNullOrBlank() throws Exception {
-        item.setName(null);
-
-        mvc.perform(post("/items")
-                        .content(mapper.writeValueAsString(item))
-                        .header("X-Sharer-User-Id", 1)
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: name")));
-
-        item.setName(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostItemThenNameIsNullOrBlank(String input) throws Exception {
+        item.setName(input);
 
         mvc.perform(post("/items")
                         .content(mapper.writeValueAsString(item))
@@ -105,21 +99,10 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.error", is("Invalid data format: name")));
     }
 
-    @Test
-    void shouldNotPostItemThenDescriptionIsNullOrBlank() throws Exception {
-        item.setDescription(null);
-
-        mvc.perform(post("/items")
-                        .content(mapper.writeValueAsString(item))
-                        .header("X-Sharer-User-Id", 1)
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: description")));
-
-        item.setDescription(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostItemThenDescriptionIsNullOrBlank(String input) throws Exception {
+        item.setDescription(input);
 
         mvc.perform(post("/items")
                         .content(mapper.writeValueAsString(item))
@@ -178,23 +161,15 @@ class ItemControllerTest {
                 .getItemDtoById(1L, 1L);
     }
 
-    @Test
-    void shouldGetAllOwnerItemsWithoutParams() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideParamValues")
+    void shouldGetAllOwnerItemsWithoutParams(String param, String value) throws Exception {
         when(itemService.getAllOwnerItems(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(item));
 
         mvc.perform(get("/items", 1)
-                        .header("X-Sharer-User-Id", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
-
-        mvc.perform(get("/items", 1)
                         .header("X-Sharer-User-Id", 1)
-                        .param("from", "1"))
+                        .param(param, value))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
@@ -202,18 +177,15 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].description", is(item.getDescription())))
                 .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
 
-        mvc.perform(get("/items", 1)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
-
-        Mockito.verify(itemService, Mockito.times(3))
+        Mockito.verify(itemService, Mockito.times(1))
                 .getAllOwnerItems(1L, Pageable.unpaged());
+    }
+
+    private static Stream<Arguments> provideParamValues() {
+        return Stream.of(
+                Arguments.of("from", "1"),
+                Arguments.of("size", "1")
+        );
     }
 
     @Test
@@ -236,25 +208,16 @@ class ItemControllerTest {
                 .getAllOwnerItems(1L, PageManager.getPageable(1, 1));
     }
 
-    @Test
-    void shouldGetSearchWithoutParams() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideParamValues")
+    void shouldGetSearchWithoutParams(String param, String value) throws Exception {
         when(itemService.getSearch(anyLong(), anyString(), any(Pageable.class)))
                 .thenReturn(List.of(item));
 
         mvc.perform(get("/items/search", 1)
-                        .param("text", "Item")
-                        .header("X-Sharer-User-Id", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
-
-        mvc.perform(get("/items/search", 1)
                         .header("X-Sharer-User-Id", 1)
                         .param("text", "Item")
-                        .param("from", "1"))
+                        .param(param, value))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
@@ -262,18 +225,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[0].description", is(item.getDescription())))
                 .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
 
-        mvc.perform(get("/items/search", 1)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("text", "Item")
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.getAvailable())));
-
-        Mockito.verify(itemService, Mockito.times(3))
+        Mockito.verify(itemService, Mockito.times(1))
                 .getSearch(1L, "Item", Pageable.unpaged());
     }
 
@@ -353,21 +305,10 @@ class ItemControllerTest {
                 .postComment(1L, 1L, comment);
     }
 
-    @Test
-    void shouldNotPostCommentThenTextIsNullOrBlank() throws Exception {
-        comment.setText(null);
-
-        mvc.perform(post("/items/{id}/comment", 1)
-                        .content(mapper.writeValueAsString(comment))
-                        .header("X-Sharer-User-Id", 1)
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.error", is("Invalid data format: text")));
-
-        comment.setText(" ");
+    @ParameterizedTest
+    @NullAndEmptySource
+    void shouldNotPostCommentThenTextIsNullOrBlank(String input) throws Exception {
+        comment.setText(input);
 
         mvc.perform(post("/items/{id}/comment", 1)
                         .content(mapper.writeValueAsString(comment))

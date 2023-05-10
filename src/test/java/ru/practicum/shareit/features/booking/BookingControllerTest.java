@@ -5,6 +5,9 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -163,23 +167,15 @@ class BookingControllerTest {
                 .getBookingById(10L, 1L);
     }
 
-    @Test
-    void shouldGetBookingsOfBookerWithoutParams() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideParamValues")
+    void shouldGetBookingsOfBookerWithoutParams(String param, String value) throws Exception {
         when(bookingService.getBookingsOfBooker(anyLong(), anyString(), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
         mvc.perform(get("/bookings")
-                        .header("X-Sharer-User-Id", 5))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(booking.getStart().toString())))
-                .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
-                .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
-
-        mvc.perform(get("/bookings")
                         .header("X-Sharer-User-Id", 5)
-                        .param("from", "1"))
+                        .param(param, value))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
@@ -187,18 +183,15 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
                 .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
 
-        mvc.perform(get("/bookings")
-                        .header("X-Sharer-User-Id", 5)
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(booking.getStart().toString())))
-                .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
-                .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
-
-        Mockito.verify(bookingService, Mockito.times(3))
+        Mockito.verify(bookingService, Mockito.times(1))
                 .getBookingsOfBooker(5L, "ALL", Pageable.unpaged());
+    }
+
+    private static Stream<Arguments> provideParamValues() {
+        return Stream.of(
+                Arguments.of("from", "1"),
+                Arguments.of("size", "1")
+        );
     }
 
     @Test
@@ -222,23 +215,15 @@ class BookingControllerTest {
                 .getBookingsOfBooker(5L, "PAST", PageManager.getPageable(1, 1));
     }
 
-    @Test
-    void shouldGetBookingsOfOwnerWithoutParams() throws Exception {
+    @ParameterizedTest
+    @MethodSource("provideParamValues")
+    void shouldGetBookingsOfOwnerWithoutParams(String param, String value) throws Exception {
         when(bookingService.getBookingsOfOwner(anyLong(), anyString(), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
         mvc.perform(get("/bookings/owner")
-                        .header("X-Sharer-User-Id", 10))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(booking.getStart().toString())))
-                .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
-                .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
-
-        mvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", 10)
-                        .param("from", "1"))
+                        .param(param, value))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
@@ -246,17 +231,7 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
                 .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
 
-        mvc.perform(get("/bookings/owner")
-                        .header("X-Sharer-User-Id", 10)
-                        .param("size", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(booking.getStart().toString())))
-                .andExpect(jsonPath("$[0].end", is(booking.getEnd().toString())))
-                .andExpect(jsonPath("$[0].status", is(booking.getStatus().toString())));
-
-        Mockito.verify(bookingService, Mockito.times(3))
+        Mockito.verify(bookingService, Mockito.times(1))
                 .getBookingsOfOwner(10L, "ALL", Pageable.unpaged());
     }
 

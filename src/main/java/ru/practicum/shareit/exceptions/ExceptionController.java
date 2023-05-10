@@ -47,7 +47,7 @@ public class ExceptionController {
     public ErrorResponse handleAlreadyExistsException(final Exception e) {
         String message;
         if (e.getClass().equals(DataIntegrityViolationException.class)) {
-            message = e.getCause().toString();
+            message = e.getCause().getLocalizedMessage();
         } else {
             message = e.getMessage();
         }
