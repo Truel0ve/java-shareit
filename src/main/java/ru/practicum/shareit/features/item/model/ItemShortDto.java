@@ -2,7 +2,6 @@ package ru.practicum.shareit.features.item.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.shareit.features.item.ItemShort;
 
 @Getter
 @Setter
@@ -13,5 +12,10 @@ public class ItemShortDto implements ItemShort {
     public ItemShortDto(ItemShort itemShort) {
         this.id = itemShort.getId();
         this.name = itemShort.getName();
+    }
+
+    public ItemShortDto(Long id, String name) {
+        this.id = id;
+        this.name = name;
     }
 }

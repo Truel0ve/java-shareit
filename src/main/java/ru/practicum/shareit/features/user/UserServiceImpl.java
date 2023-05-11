@@ -36,8 +36,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserDtoById(Long id) {
-        validateUserId(id);
-        return UserMapper.toUserDto(userRepository.getReferenceById(id));
+        return UserMapper.toUserDto(getUserById(id));
     }
 
     @Override
@@ -94,6 +93,13 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    @Override
+    public void validateUserId(Long id) {
+        if (id == null || userRepository.findById(id).isEmpty()) {
+            throw new ArgumentNotFoundException("The specified user id=" + id + " does not exist");
+        }
+    }
+
     private void patchUserName(JsonNode jsonNode, User user) {
         String newName = jsonNode.get("name").asText();
         UserValidator.validateName(newName);
@@ -104,11 +110,5 @@ public class UserServiceImpl implements UserService {
         String newEmail = jsonNode.get("email").asText();
         UserValidator.validateEmail(newEmail);
         user.setEmail(newEmail);
-    }
-
-    private void validateUserId(Long id) {
-        if (id == null || userRepository.findById(id).isEmpty()) {
-            throw new ArgumentNotFoundException("The specified user id=" + id + " does not exist");
-        }
     }
 }

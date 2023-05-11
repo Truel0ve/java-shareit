@@ -1,5 +1,7 @@
 package ru.practicum.shareit.features.booking;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +14,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Find ALL bookings of booker
-    List<Booking> findAllByUserIdOrderByStartDesc(Long bookerId);
+    Page<Booking> findAllByUserIdOrderByStartDesc(Long bookerId, Pageable pageable);
 
     // Find booking of booker for item
     List<Booking> findByUserIdAndItemIdOrderByStartAsc(Long bookerId, Long itemId);
@@ -21,34 +23,34 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByItemIdOrderByStartAsc(Long itemId);
 
     // Find PAST bookings of booker
-    List<Booking> findAllByUserIdAndEndIsBeforeOrderByStartDesc(Long bookerId, LocalDateTime localDateTime);
+    Page<Booking> findAllByUserIdAndEndIsBeforeOrderByStartDesc(Long bookerId, Pageable pageable, LocalDateTime localDateTime);
 
     // Find CURRENT bookings of booker
-    List<Booking> findAllByUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(Long bookerId, LocalDateTime from, LocalDateTime to);
+    Page<Booking> findAllByUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(Long bookerId, Pageable pageable, LocalDateTime from, LocalDateTime to);
 
     // Find FUTURE bookings of booker
-    List<Booking> findAllByUserIdAndStartIsAfterOrderByStartDesc(Long bookerId, LocalDateTime localDateTime);
+    Page<Booking> findAllByUserIdAndStartIsAfterOrderByStartDesc(Long bookerId, Pageable pageable, LocalDateTime localDateTime);
 
     // Find bookings of booker with status
-    List<Booking> findAllByUserIdAndStatusIsOrderByStartDesc(Long bookerId, BookingStatus bookingStatus);
+    Page<Booking> findAllByUserIdAndStatusIsOrderByStartDesc(Long bookerId, Pageable pageable, BookingStatus bookingStatus);
 
     // Find ALL bookings of owner
-    List<Booking> findAllByItemUserIdOrderByStartDesc(Long ownerId);
+    Page<Booking> findAllByItemUserIdOrderByStartDesc(Long ownerId, Pageable pageable);
 
     // Find PAST bookings of owner
-    List<Booking> findAllByItemUserIdAndEndIsBeforeOrderByStartDesc(Long ownerId, LocalDateTime localDateTime);
+    Page<Booking> findAllByItemUserIdAndEndIsBeforeOrderByStartDesc(Long ownerId, Pageable pageable, LocalDateTime localDateTime);
 
     // Find CURRENT bookings of owner
-    List<Booking> findAllByItemUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(Long ownerId, LocalDateTime from, LocalDateTime to);
+    Page<Booking> findAllByItemUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(Long ownerId, Pageable pageable, LocalDateTime from, LocalDateTime to);
 
     // Find FUTURE bookings of owner
-    List<Booking> findAllByItemUserIdAndStartIsAfterOrderByStartDesc(Long ownerId, LocalDateTime localDateTime);
+    Page<Booking> findAllByItemUserIdAndStartIsAfterOrderByStartDesc(Long ownerId, Pageable pageable, LocalDateTime localDateTime);
 
     // Find bookings of owner with status
-    List<Booking> findAllByItemUserIdAndStatusIsOrderByStartDesc(Long ownerId, BookingStatus bookingStatus);
+    Page<Booking> findAllByItemUserIdAndStatusIsOrderByStartDesc(Long ownerId, Pageable pageable, BookingStatus bookingStatus);
 
     // Patch booking status
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Booking b " +
             "SET b.status = ?2 " +
             "WHERE b.id = ?1")

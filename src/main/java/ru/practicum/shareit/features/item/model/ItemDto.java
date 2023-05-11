@@ -24,4 +24,5 @@ public class ItemDto {
     BookingQueueInfo lastBooking;
     BookingQueueInfo nextBooking;
     List<CommentDto> comments = new ArrayList<>();
+    Long requestId;
 }

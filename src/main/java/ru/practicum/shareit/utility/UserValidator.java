@@ -15,7 +15,7 @@ public class UserValidator {
     }
 
     public void validateEmail(String email) throws ValidationException {
-        if (!Pattern.matches("^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
+        if (email == null || !Pattern.matches("^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
                 + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$", email)) {
             throw new ValidationException("User has wrong E-mail data");
         }

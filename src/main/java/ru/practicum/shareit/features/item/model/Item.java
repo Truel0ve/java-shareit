@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import ru.practicum.shareit.features.request.model.ItemRequest;
 import ru.practicum.shareit.features.user.model.User;
 
 import javax.persistence.*;
@@ -22,7 +23,7 @@ public class Item {
     Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     User user;
 
@@ -37,4 +38,8 @@ public class Item {
     @NotNull
     @Column(name = "available", nullable = false)
     Boolean available;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "request_id")
+    ItemRequest itemRequest;
 }

@@ -2,6 +2,8 @@ package ru.practicum.shareit.features.booking;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.EnumUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.ArgumentNotFoundException;
@@ -15,7 +17,6 @@ import ru.practicum.shareit.features.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,48 +40,44 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookingsOfBooker(Long bookerId, String state) {
-        validateUserId(bookerId);
+    public List<BookingDto> getBookingsOfBooker(Long bookerId, String state, Pageable pageable) {
+        userService.validateUserId(bookerId);
         validateState(state);
         switch (State.valueOf(state)) {
-            case ALL:
-                return mapToBookingDtoList(bookingRepository.findAllByUserIdOrderByStartDesc(bookerId));
             case PAST:
-                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndEndIsBeforeOrderByStartDesc(bookerId, LocalDateTime.now()));
+                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndEndIsBeforeOrderByStartDesc(bookerId, pageable, LocalDateTime.now()));
             case CURRENT:
                 return mapToBookingDtoList(bookingRepository
-                        .findAllByUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(bookerId, LocalDateTime.now(), LocalDateTime.now()));
+                        .findAllByUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(bookerId, pageable, LocalDateTime.now(), LocalDateTime.now()));
             case FUTURE:
-                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStartIsAfterOrderByStartDesc(bookerId, LocalDateTime.now()));
+                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStartIsAfterOrderByStartDesc(bookerId, pageable, LocalDateTime.now()));
             case WAITING:
-                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStatusIsOrderByStartDesc(bookerId, BookingStatus.WAITING));
+                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStatusIsOrderByStartDesc(bookerId, pageable, BookingStatus.WAITING));
             case REJECTED:
-                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStatusIsOrderByStartDesc(bookerId, BookingStatus.REJECTED));
+                return mapToBookingDtoList(bookingRepository.findAllByUserIdAndStatusIsOrderByStartDesc(bookerId, pageable, BookingStatus.REJECTED));
             default:
-                throw new WrongStateArgumentException("Unknown state: " + state);
+                return mapToBookingDtoList(bookingRepository.findAllByUserIdOrderByStartDesc(bookerId, pageable));
         }
     }
 
     @Override
-    public List<BookingDto> getBookingsOfOwner(Long ownerId, String state) {
-        validateUserId(ownerId);
+    public List<BookingDto> getBookingsOfOwner(Long ownerId, String state, Pageable pageable) {
+        userService.validateUserId(ownerId);
         validateState(state);
         switch (State.valueOf(state)) {
-            case ALL:
-                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdOrderByStartDesc(ownerId));
             case PAST:
-                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndEndIsBeforeOrderByStartDesc(ownerId, LocalDateTime.now()));
+                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndEndIsBeforeOrderByStartDesc(ownerId, pageable, LocalDateTime.now()));
             case CURRENT:
                 return mapToBookingDtoList(bookingRepository
-                        .findAllByItemUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(ownerId, LocalDateTime.now(), LocalDateTime.now()));
+                        .findAllByItemUserIdAndStartLessThanEqualAndEndGreaterThanEqualOrderByStartDesc(ownerId, pageable, LocalDateTime.now(), LocalDateTime.now()));
             case FUTURE:
-                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStartIsAfterOrderByStartDesc(ownerId, LocalDateTime.now()));
+                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStartIsAfterOrderByStartDesc(ownerId, pageable, LocalDateTime.now()));
             case WAITING:
-                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStatusIsOrderByStartDesc(ownerId, BookingStatus.WAITING));
+                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStatusIsOrderByStartDesc(ownerId, pageable, BookingStatus.WAITING));
             case REJECTED:
-                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStatusIsOrderByStartDesc(ownerId, BookingStatus.REJECTED));
+                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdAndStatusIsOrderByStartDesc(ownerId, pageable, BookingStatus.REJECTED));
             default:
-                throw new WrongStateArgumentException("Unknown state: " + state);
+                return mapToBookingDtoList(bookingRepository.findAllByItemUserIdOrderByStartDesc(ownerId, pageable));
         }
     }
 
@@ -131,10 +128,8 @@ public class BookingServiceImpl implements BookingService {
         return bookingDto;
     }
 
-    private List<BookingDto> mapToBookingDtoList(List<Booking> bookings) {
-        return bookings.stream()
-                .map(this::mapToBookingDto)
-                .collect(Collectors.toList());
+    private List<BookingDto> mapToBookingDtoList(Page<Booking> bookings) {
+        return bookings.map(this::mapToBookingDto).getContent();
     }
 
     private boolean isOwnerOfItem(Long ownerId, Item item) {
@@ -144,12 +139,6 @@ public class BookingServiceImpl implements BookingService {
     private void validateItemAvailable(Item item) {
         if (item.getAvailable().equals(false)) {
             throw new ValidationException("The specified item id=" + item.getId() + " is not available");
-        }
-    }
-
-    private void validateUserId(Long id) {
-        if (id == null || userService.getUserDtoById(id) == null) {
-            throw new ArgumentNotFoundException("The specified user id=" + id + " does not exist");
         }
     }
 

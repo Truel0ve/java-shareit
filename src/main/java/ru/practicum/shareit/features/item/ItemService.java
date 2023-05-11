@@ -1,14 +1,13 @@
 package ru.practicum.shareit.features.item;
 
-import ru.practicum.shareit.features.item.model.CommentDto;
-import ru.practicum.shareit.features.item.model.Item;
-import ru.practicum.shareit.features.item.model.ItemDto;
-import ru.practicum.shareit.features.item.model.ItemShortDto;
+import org.springframework.data.domain.Pageable;
+import ru.practicum.shareit.features.item.model.*;
 
 import java.util.List;
 
 public interface ItemService {
-    List<ItemDto> getAllOwnerItems(Long ownerId);
+
+    List<ItemDto> getAllOwnerItems(Long ownerId, Pageable pageable);
 
     Item getItemById(Long itemId);
 
@@ -16,7 +15,9 @@ public interface ItemService {
 
     ItemShortDto getItemShortById(Long itemId);
 
-    List<ItemDto> getSearch(String text);
+    List<ItemForRequestDto> getItemsForRequest(Long requestId);
+
+    List<ItemDto> getSearch(Long userId, String text, Pageable pageable);
 
     ItemDto create(Long ownerId, ItemDto itemDto);
 

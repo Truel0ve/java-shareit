@@ -1,4 +1,4 @@
-package ru.practicum.shareit.features.item;
+package ru.practicum.shareit.features.item.model;
 
 public interface ItemShort {
 

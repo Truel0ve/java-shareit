@@ -9,7 +9,7 @@ import ru.practicum.shareit.features.user.model.User;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "requests", schema = "public")
@@ -23,7 +23,7 @@ public class ItemRequest {
     Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "requestor_id", nullable = false)
     User user;
 
@@ -33,5 +33,5 @@ public class ItemRequest {
 
     @NotNull
     @Column(name = "creation_date", nullable = false)
-    Timestamp creationDate;
+    LocalDateTime created;
 }
