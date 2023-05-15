@@ -8,8 +8,6 @@ import ru.practicum.shareit.features.request.model.ItemRequest;
 import ru.practicum.shareit.features.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "items", schema = "public")
@@ -22,20 +20,16 @@ public class Item {
     @Column(name = "item_id")
     Long id;
 
-    @NotNull
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     User user;
 
-    @NotBlank
     @Column(name = "item_name", nullable = false)
     String name;
 
-    @NotBlank
     @Column(name = "description", length = 200, nullable = false)
     String description;
 
-    @NotNull
     @Column(name = "available", nullable = false)
     Boolean available;
 

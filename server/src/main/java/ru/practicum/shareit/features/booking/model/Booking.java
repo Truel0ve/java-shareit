@@ -8,7 +8,6 @@ import ru.practicum.shareit.features.item.model.Item;
 import ru.practicum.shareit.features.user.model.User;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
@@ -22,24 +21,19 @@ public class Booking {
     @Column(name = "booking_id")
     Long id;
 
-    @NotNull
     @Column(name = "start_date", nullable = false)
     LocalDateTime start;
 
-    @NotNull
     @Column(name = "end_date", nullable = false)
     LocalDateTime end;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     BookingStatus status;
 
-    @NotNull
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "booker_id", nullable = false)
     User user;
 
-    @NotNull
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id", nullable = false)
     Item item;

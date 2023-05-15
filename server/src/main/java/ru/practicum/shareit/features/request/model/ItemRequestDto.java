@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.features.item.model.ItemForRequestDto;
 
-import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequestDto {
     Long id;
-    @NotBlank
     String description;
     LocalDateTime created = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
     List<ItemForRequestDto> items;

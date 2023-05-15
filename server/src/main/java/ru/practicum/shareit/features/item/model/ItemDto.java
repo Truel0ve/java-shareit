@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.features.booking.model.BookingQueueInfo;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,11 +13,8 @@ import java.util.List;
 public class ItemDto {
     Long id;
     Long ownerId;
-    @NotBlank
     String name;
-    @NotBlank
     String description;
-    @NotNull
     Boolean available;
     BookingQueueInfo lastBooking;
     BookingQueueInfo nextBooking;
