@@ -42,7 +42,7 @@ public class ExceptionController {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ExceptionHandler({ArgumentAlreadyExistsException.class, DataIntegrityViolationException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleAlreadyExistsException(final Exception e) {
         String message;
